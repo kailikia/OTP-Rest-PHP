@@ -1,4 +1,5 @@
 <?php
+header('Access-Control-Allow-Origin: *');
 // Be sure to include the file you've just downloaded
 require_once('AfricasTalkingGateway.php');
 // Specify your authentication credentials
@@ -15,6 +16,12 @@ $dbpassword = 'Otp@2021';
 // Specify the numbers that you want to send to in a comma-separated list
 $_POST = json_decode(file_get_contents('php://input'), true);
 
+//Remove 1
+$file = fopen("received_log.txt","w");
+fwrite($file,json_decode(file_get_contents('php://input'), true));
+fclose($file);
+//End remove 1
+
 // Create a new instance of our awesome gateway class
 $gateway    = new AfricasTalkingGateway($username, $apikey);
 /*************************************************************************************/
@@ -30,9 +37,11 @@ $statement_check->execute();
 
 $result = $statement_check -> fetch();
 
+//Remove 2
 $file = fopen("my_log.txt","w");
 fwrite($file,json_encode($result));
 fclose($file);
+//End remove 2
 
 	
  if($result)
@@ -40,8 +49,15 @@ fclose($file);
 	
 	  $otp = rand(1001,9999);  
 	//   // Thats it, hit send and we'll take care of the rest. 
-	  $_POST['message'] = "Your OTP is " . $otp;
-
+	
+	if($_POST['otp'] == "nothing"){
+	    $_POST['message'] = $_POST['message'] ;
+	}
+	else
+	{
+	    $_POST['message'] = "Your OTP is " . $otp;
+	}
+	  
 	  $results = $gateway->sendMessage($_POST['phone'], $_POST['message'],$from);
 
 	  foreach($results as $result) 
