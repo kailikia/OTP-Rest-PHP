@@ -20,25 +20,47 @@ $gateway    = new AfricasTalkingGateway($username, $apikey);
 /*************************************************************************************/
 try 
 { 
-  $otp = rand(1001,9999);  
-//   // Thats it, hit send and we'll take care of the rest. 
-  $_POST['message'] = "Your OTP is " . $otp;
+  $link = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbusername, $dbpassword);
+	
+  $statement_check = $link->prepare('SELECT phone FROM otps WHERE phone=:param LIMIT 1');
+	
   
-  $results = $gateway->sendMessage($_POST['phone'], $_POST['message'],$from);
-           
-  foreach($results as $result) 
-  {
-	
-    $arr = array ('phone'=>$result->number,'status'=>$result->messageId,'message'=>$_POST['message'],'otp'=>(string)$otp);
-    
-    echo json_encode($arr);
-	
-    $link = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbusername, $dbpassword);
+$statement_check->bindParam(':param', $_POST['phone']);
+$statement_check->execute();
 
-    $statement = $link->prepare('INSERT INTO otps (message_id, phone, otp, status) VALUES (?, ?, ?, ?)');
+$result = $statement_check -> fetch();
+
+$file = fopen("my_log.txt","w");
+fwrite($file,json_encode($result));
+fclose($file);
+
 	
-    $statement->execute([$result->messageId,$_POST['phone'] ,$otp , $result->status]);
-   }
+ if($result)
+ {
+	
+	  $otp = rand(1001,9999);  
+	//   // Thats it, hit send and we'll take care of the rest. 
+	  $_POST['message'] = "Your OTP is " . $otp;
+
+	  $results = $gateway->sendMessage($_POST['phone'], $_POST['message'],$from);
+
+	  foreach($results as $result) 
+	  {
+
+	    $arr = array ('phone'=>$result->number,'status'=>$result->messageId,'message'=>$_POST['message'],'otp'=>(string)$otp);
+
+	    echo json_encode($arr);
+
+	    $statement = $link->prepare('INSERT INTO otps (message_id, phone, otp, status) VALUES (?, ?, ?, ?)');
+
+	    $statement->execute([$result->messageId,$_POST['phone'] ,$otp , $result->status]);
+	   }
+ }
+else
+{
+    $arr = array ('phone'=>'failed','status'=>'failed','message'=>'failed','otp'=>'failed');
+	echo json_encode($arr);
+}
   
 }
 catch ( AfricasTalkingGatewayException $e )
