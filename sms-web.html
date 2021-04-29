@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>HTML Forms</h2>
+
+<form id="messageSend" method="post" action="http://zetes.co.ke/sendSMS.php">
+  <label for="fname">Phone(+254..):</label><br>
+  <input type="text" name="phone" placeholder="Enter +25471234567"><br>
+  <label for="message">Message</label><br>
+  <input type="text" name="message" >
+ 
+  <input name="status" value="nothing" type="hidden">
+  <input name="otp" value="nothing" type="hidden">
+  <input type="submit" value="Submit">
+</form> 
+
+<div id="response_error">
+
+</div>
+
+</body>
+
+<script src="https://techcamp.co.ke/assets/js/jquery.js"></script>
+
+<script type="text/javascript">
+
+  //Message sending Ajax Request
+
+      jQuery(document).ready(function(){
+
+        $('#messageSend').on('submit', function(e) {
+
+          e.preventDefault();
+
+         var that = $(this),url = that.attr('action'),method = that.attr('method'),data = {};
+            
+         that.find('[name]').each(function(index, value){var that = $(this),name = that.attr('name'),value = that.val();data[name] = value;});
+
+         $('#response_error').html('<center><i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i></center>');
+
+         console.log("data is:", data);
+         
+          
+        $.ajax({
+              url: url,
+              type: "POST",
+              data: JSON.stringify(data),
+              success: function(results){
+
+              $('#response_error').html('success');
+
+              $('#messageSend').html(results);
+                
+              },
+
+              error: function(data){
+                   var errors = '<font color="red"><ul>';
+                    for(datos in data.responseJSON){
+                       errors += '<li>' + data.responseJSON[datos] + '</li>';
+                      }
+                      errors += '</ul></font>';
+                      $('#response_error').show().html(errors);
+              } 
+          });
+
+        });
+      });
+
+      </script>
+</html>
